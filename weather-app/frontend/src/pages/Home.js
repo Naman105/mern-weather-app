@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import API from "../api";
 import WeatherCard from "../components/WeatherCard";
 import { useAuth } from "../context/AuthContext";
 import { FaSearch, FaHistory, FaTrash } from "react-icons/fa";
@@ -19,7 +19,7 @@ export default function Home() {
 
   const fetchHistory = async () => {
     try {
-      const { data } = await axios.get("/api/weather/user/history");
+      const { data } = await API.get("/api/weather/user/history");
       setHistory(data);
     } catch {}
   };
@@ -33,7 +33,7 @@ export default function Home() {
     setWeather(null);
 
     try {
-      const { data } = await axios.get(`/api/weather/${city.trim()}`);
+      const { data } = await API.get(`/api/weather/${city.trim()}`);
       setWeather(data);
       if (user) fetchHistory();
     } catch (err) {
@@ -45,7 +45,7 @@ export default function Home() {
 
   const clearHistory = async () => {
     try {
-      await axios.delete("/api/weather/user/history");
+      await API.delete("/api/weather/user/history");
       setHistory([]);
     } catch {}
   };
