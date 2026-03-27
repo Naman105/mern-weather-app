@@ -65,6 +65,14 @@ export default function Login() {
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white 
                            placeholder-gray-500 focus:outline-none focus:border-blue-400"
               />
+              <p className="text-sm text-right mt-2">
+                <span
+                  className="text-blue-400 cursor-pointer"
+                  onClick={() => navigate("/forgot-password")}
+                >
+                  Forgot Password?
+                </span>
+                </p>
             </div>
 
             <button

@@ -1,18 +1,26 @@
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
-// Generate JWT
+// JWT
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-// @route POST /api/auth/register
+// EMAIL TRANSPORTER
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+// ================= REGISTER =================
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password)
-      return res.status(400).json({ message: "All fields are required" });
 
     const exists = await User.findOne({ email });
     if (exists)
@@ -25,12 +33,12 @@ exports.register = async (req, res) => {
       token: generateToken(user._id),
       user: { id: user._id, name: user.name, email: user.email },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// @route POST /api/auth/login
+// ================= LOGIN =================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -47,17 +55,71 @@ exports.login = async (req, res) => {
       token: generateToken(user._id),
       user: { id: user._id, name: user.name, email: user.email },
     });
-  } catch (err) {
+  } catch {
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// @route GET /api/auth/me
-exports.getMe = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id).select("-password");
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
+// ================= FORGOT PASSWORD =================
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  // ✅ HANDLE NOT REGISTERED (NO ERROR)
+  if (!user) {
+    return res.json({
+      msg: "Email not registered",
+    });
   }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  user.resetToken = token;
+  user.resetTokenExpiry = Date.now() + 15 * 60 * 1000;
+  await user.save();
+  
+  const resetLink = `${process.env.FRONTEND_URL.replace(/\/$/, "")}/reset-password/${token}`;
+
+  console.log("RESET LINK:", resetLink);
+
+  //SEND EMAIL HERE
+  await transporter.sendMail({
+  to: user.email,
+  subject: "Password Reset",
+  html: `
+    <h3>Reset your password</h3>
+    <p>Click below link to reset:</p>
+    <a href="${resetLink}">${resetLink}</a>
+  `,
+});
+
+  res.json({ msg: "Reset link sent to email" });
+};
+
+// ================= RESET PASSWORD =================
+exports.resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  const user = await User.findOne({
+    resetToken: token,
+    resetTokenExpiry: { $gt: Date.now() },
+  });
+
+  if (!user)
+    return res.status(400).json({ msg: "Invalid or expired token" });
+
+  user.password = await bcrypt.hash(password, 10);
+  user.resetToken = undefined;
+  user.resetTokenExpiry = undefined;
+
+  await user.save();
+
+  res.json({ msg: "Password updated" });
+};
+
+// ================= GET ME =================
+exports.getMe = async (req, res) => {
+  const user = await User.findById(req.user.id).select("-password");
+  res.json(user);
 };
