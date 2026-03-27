@@ -7,7 +7,14 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: "https://mern-weather-app-iota.vercel.app",
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Routes
