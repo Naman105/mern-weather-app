@@ -11,7 +11,11 @@ const cors = require("cors");
 
 app.use(
   cors({
-    origin: "https://mern-weather-app-iota.vercel.app",
+    origin: [
+      "http://localhost:3000",
+      "https://mern-weather-app-iota.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   })
 );
