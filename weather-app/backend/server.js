@@ -1,13 +1,11 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
+const cors = require("cors");   // ✅ keep only this
 const dotenv = require("dotenv");
 
 dotenv.config();
 
 const app = express();
-
-const cors = require("cors");
 
 app.use(
   cors({
@@ -19,6 +17,7 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json());
 
 // Routes
