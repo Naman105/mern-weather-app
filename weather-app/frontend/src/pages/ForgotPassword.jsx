@@ -47,7 +47,16 @@ export default function ForgotPassword() {
         </form>
 
         {msg && (
-          <p className="mt-4 text-green-400 text-center">{msg}</p>
+          <p
+  className={`mt-4 text-center ${
+    msg.toLowerCase().includes("not") ||
+    msg.toLowerCase().includes("wrong")
+      ? "text-red-400"
+      : "text-green-400"
+  }`}
+>
+  {msg}
+</p>
         )}
       </div>
     </div>

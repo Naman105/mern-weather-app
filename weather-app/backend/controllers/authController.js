@@ -1,7 +1,6 @@
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
 // JWT
@@ -9,13 +8,9 @@ const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
 // EMAIL TRANSPORTER
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ================= REGISTER =================
 exports.register = async (req, res) => {
@@ -84,17 +79,31 @@ exports.forgotPassword = async (req, res) => {
   console.log("RESET LINK:", resetLink);
 
   //SEND EMAIL HERE
-  await transporter.sendMail({
-  to: user.email,
-  subject: "Password Reset",
-  html: `
-    <h3>Reset your password</h3>
-    <p>Click below link to reset:</p>
-    <a href="${resetLink}">${resetLink}</a>
-  `,
-});
+ try {
+  await resend.emails.send({
+    from: "onboarding@resend.dev",
+    to: user.email,
+    subject: "Reset Your Password",
+    html: `
+      <h2>Password Reset</h2>
+      <p>Click below to reset your password:</p>
+      <a href="${resetLink}">Reset Password</a>
+    `,
+  });
 
   res.json({ msg: "Reset link sent to email" });
+
+} catch (error) {
+  console.log("EMAIL ERROR:", error.message);
+
+  // fallback (important)
+  console.log("RESET LINK:", resetLink);
+
+  res.json({
+    msg: "Email failed, but reset link generated (check server logs)",
+  });
+}
+
 };
 
 // ================= RESET PASSWORD =================
