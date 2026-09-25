@@ -1,3 +1,0 @@
-# 🌤️ WeatherApp – MERN Stack
-
-
