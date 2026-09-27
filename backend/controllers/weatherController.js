@@ -40,11 +40,19 @@ exports.getWeather = async (req, res) => {
     }
 
     res.json(weather);
-  } catch (err) {
+  }   catch (err) {
+    console.error("Weather API Error:", err.message);
+    console.error("Status:", err.response?.status);
+    console.error("Response:", err.response?.data);
+
     if (err.response?.status === 404) {
       return res.status(404).json({ message: "City not found" });
     }
-    res.status(500).json({ message: "Server error" });
+
+    res.status(500).json({
+      message: "Server error",
+      error: err.message,
+    });
   }
 };
 
