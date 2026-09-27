@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://mern-weather-app-sr4g.onrender.com'
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000'
 });
 
 export default API;
